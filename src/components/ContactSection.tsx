@@ -5,13 +5,12 @@ import { RESTAURANT_INFO } from '../data/restaurantData';
 
 interface ContactSectionProps {
   lang: Language;
-  onOpenReservation: () => void;
+  onOpenReservation?: () => void;
   restaurantInfo?: RestaurantInfoType;
 }
 
 export const ContactSection: React.FC<ContactSectionProps> = ({
   lang,
-  onOpenReservation,
   restaurantInfo
 }) => {
   const isAr = lang === 'ar';
@@ -53,15 +52,15 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
         <div className="text-center space-y-2 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#d4af37]/30 text-[#b8860b] text-xs font-bold uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
-            <span>{isAr ? 'موقعنا والضيافة الأصيلة' : 'Location & Hospitality'}</span>
+            <span>{isAr ? 'التواصل والحجز المباشر' : 'Direct Contact & Booking'}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#141414] tracking-tight font-heading">
-            {isAr ? 'أهلاً بكم في شعبيات البيت الريفي' : 'Visit Us & Experience Genuine Hospitality'}
+            {isAr ? 'تواصل معنا لحجز جلستك وضيافتك' : 'Contact Us for Reservations & Inquiries'}
           </h2>
           <p className="text-xs sm:text-sm text-stone-600 font-body">
             {isAr
-              ? 'يسعدنا استقبالكم وعائلاتكم الكريمة في فرعنا للاستمتاع بأطيب الأطباق التراثية على مدار 24 ساعة.'
-              : 'We welcome you and your family 24/7 to savor the most memorable traditional feasts.'}
+              ? 'التواصل المباشر هو السبيل المعتمد للحجز والاستفسار وتجهيز ولائمكم في شعبيات البيت الريفي بالرياض.'
+              : 'Direct communication via phone and WhatsApp is the official way to reserve your table and banquets.'}
           </p>
         </div>
 
@@ -320,15 +319,22 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
               </form>
             )}
 
-            {/* Table reservation banner button */}
+            {/* Direct Booking via WhatsApp */}
             <div className="pt-3 border-t border-stone-200">
-              <button
-                id="contact-reserve-table-btn"
-                onClick={onOpenReservation}
-                className="w-full py-3 px-3 rounded-xl bg-[#faf9f6] hover:bg-stone-100 text-[#141414] border border-[#d4af37]/40 font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-2xs cursor-pointer"
+              <a
+                id="contact-whatsapp-direct-btn"
+                href={`https://wa.me/${info.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
+                  isAr
+                    ? 'السلام عليكم ورحمة الله، أود الحجز والاستفسار في شعبيات البيت الريفي بالرياض'
+                    : 'Hello, I would like to make a reservation or inquire at Shaabiyat Al-Bait Al-Reefi in Riyadh'
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
               >
-                <span>{isAr ? 'أو احجز طاولة وجلسة عائلية مباشرة 📅' : 'Or Book a Majlis Table Directly 📅'}</span>
-              </button>
+                <MessageCircle className="w-4 h-4 text-white" />
+                <span>{isAr ? 'حجز مباشر وفوري عبر الواتساب' : 'Direct Booking via WhatsApp'}</span>
+              </a>
             </div>
 
           </div>

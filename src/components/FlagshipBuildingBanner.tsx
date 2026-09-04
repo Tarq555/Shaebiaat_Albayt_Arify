@@ -5,7 +5,7 @@ import { IMAGES, RESTAURANT_INFO } from '../data/restaurantData';
 
 interface FlagshipBuildingBannerProps {
   lang: Language;
-  onOpenReservation: () => void;
+  onOpenReservation?: () => void;
   buildingPhoto?: string;
 }
 
@@ -127,12 +127,13 @@ export const FlagshipBuildingBanner: React.FC<FlagshipBuildingBannerProps> = ({
                 <span>{isAr ? 'الاتجاهات عبر Google Maps' : 'Get Directions'}</span>
               </a>
 
-              <button
-                onClick={onOpenReservation}
+              <a
+                href={`tel:${RESTAURANT_INFO.phone}`}
                 className="py-3 px-4 rounded-xl bg-[#faf9f6] hover:bg-stone-100 text-[#141414] border border-[#d4af37]/30 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>{isAr ? 'حجز جلسة عائلية' : 'Book a Table'}</span>
-              </button>
+                <Phone className="w-4 h-4 text-[#b8860b]" />
+                <span>{isAr ? 'اتصال مباشر للحجز' : 'Call to Book'}</span>
+              </a>
             </div>
 
           </div>

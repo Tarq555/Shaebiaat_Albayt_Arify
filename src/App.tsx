@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   Language, Currency, CategoryId, Category, MenuItem, CartItem,
-  HeroConfig, SiteDisplaySettings, StoryConfig, AdminTab
+  HeroConfig, SiteDisplaySettings, StoryConfig, AdminTab,
+  FaqItem, MenuWarehouseItem, MemberUser
 } from './types';
 import {
   INITIAL_MENU_ITEMS, RESTAURANT_INFO, CATEGORIES as DEFAULT_CATEGORIES,
-  DEFAULT_HERO_CONFIG, DEFAULT_SITE_SETTINGS, DEFAULT_STORY_CONFIG
+  DEFAULT_HERO_CONFIG, DEFAULT_SITE_SETTINGS, DEFAULT_STORY_CONFIG,
+  DEFAULT_FAQS, DEFAULT_WAREHOUSE_ITEMS
 } from './data/restaurantData';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -16,7 +18,6 @@ import { FlagshipBuildingBanner } from './components/FlagshipBuildingBanner';
 import { FaqSection } from './components/FaqSection';
 import { FloatingActions } from './components/FloatingActions';
 import { MenuSection } from './components/MenuSection';
-import { KitchenStorySection } from './components/KitchenStorySection';
 import { OfficialCredentialsSection } from './components/OfficialCredentialsSection';
 import { ContactSection } from './components/ContactSection';
 import { CartDrawer } from './components/CartDrawer';
@@ -27,12 +28,17 @@ import { AdminManagerModal, RestaurantInfoType } from './components/AdminManager
 import { AdminLoginModal } from './components/AdminLoginModal';
 import { AdminFloatingBar } from './components/AdminFloatingBar';
 import { ManualImageModal, ImagePreset } from './components/ManualImageModal';
+import { QrTableMenu } from './components/QrTableMenu';
+import { TableMenuPage } from './components/TableMenuPage';
+import { OffersSubscriptionModal } from './components/OffersSubscriptionModal';
+import { AuthModal } from './components/AuthModal';
+import { QuickDishEditorModal } from './components/QuickDishEditorModal';
 import { Footer } from './components/Footer';
 
 export const App: React.FC = () => {
   const [lang, setLang] = useState<Language>('ar');
   const [currency, setCurrency] = useState<Currency>('SAR');
-  const [activeTab, setActiveTab] = useState<'home' | 'menu' | 'gallery' | 'story' | 'contact'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'menu' | 'gallery' | 'contact' | 'table-menu'>('home');
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>('all');
   
   // Restaurant info state with local persistence
@@ -142,6 +148,46 @@ export const App: React.FC = () => {
     return [];
   });
 
+  // Menu Warehouse items state with local persistence
+  const [warehouseItems, setWarehouseItems] = useState<MenuWarehouseItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('al_bait_warehouse_items');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading stored warehouse items', e);
+    }
+    return DEFAULT_WAREHOUSE_ITEMS;
+  });
+
+  const handleUpdateWarehouseItems = (items: MenuWarehouseItem[]) => {
+    setWarehouseItems(items);
+    try {
+      localStorage.setItem('al_bait_warehouse_items', JSON.stringify(items));
+    } catch (e) {
+      console.error('Error saving warehouse items', e);
+    }
+  };
+
+  // FAQs state with local persistence so user can author answers
+  const [faqs, setFaqs] = useState<FaqItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('al_bait_faqs');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading stored faqs', e);
+    }
+    return DEFAULT_FAQS;
+  });
+
+  const handleUpdateFaqs = (updatedFaqs: FaqItem[]) => {
+    setFaqs(updatedFaqs);
+    try {
+      localStorage.setItem('al_bait_faqs', JSON.stringify(updatedFaqs));
+    } catch (e) {
+      console.error('Error saving faqs', e);
+    }
+  };
+
   // Admin state with strict temporary session auth (zero persistence across visitor devices)
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
     try {
@@ -171,6 +217,51 @@ export const App: React.FC = () => {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [adminInitialTab, setAdminInitialTab] = useState<AdminTab>('dishes');
   const [dishToEditForAdmin, setDishToEditForAdmin] = useState<MenuItem | null>(null);
+
+  // Standalone QR Table Menu State
+  const [isQrMenuOpen, setIsQrMenuOpen] = useState(false);
+
+  // Registered Member State (Persisted)
+  const [currentMember, setCurrentMember] = useState<MemberUser | null>(() => {
+    try {
+      const saved = localStorage.getItem('al_bait_member_session');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+
+  const handleMemberLogin = (member: MemberUser) => {
+    setCurrentMember(member);
+    try {
+      localStorage.setItem('al_bait_member_session', JSON.stringify(member));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleMemberLogout = () => {
+    setCurrentMember(null);
+    try {
+      localStorage.removeItem('al_bait_member_session');
+    } catch {
+      // ignore
+    }
+  };
+
+  // Unified Auth Modal (Sign in for members & Admin PIN)
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalInitialTab, setAuthModalInitialTab] = useState<'member' | 'admin'>('member');
+
+  // Exclusive Offers Subscription & Marketing Lead Capture Modal
+  const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
+
+  // Live in-context dish editor state (real-time visitor view editing)
+  const [liveEditDish, setLiveEditDish] = useState<MenuItem | null>(null);
+  const [liveEditMode, setLiveEditMode] = useState(true);
 
   // Manual image upload modal state (for restaurant building or category images)
   const [isManualImageModalOpen, setIsManualImageModalOpen] = useState(false);
@@ -222,6 +313,16 @@ export const App: React.FC = () => {
         } else {
           setIsAdminLoginOpen(true);
         }
+      }
+      if (hash === '#qrmenu' || hash === '#table' || hash === '#table-menu' || params.get('menu') === 'table') {
+        setActiveTab('table-menu');
+      }
+      if (hash === '#offers' || hash === '#subscribe' || params.get('offers') === 'true') {
+        setIsOffersModalOpen(true);
+      }
+      if (hash === '#auth' || hash === '#member-login' || hash === '#signin') {
+        setAuthModalInitialTab('member');
+        setIsAuthModalOpen(true);
       }
     };
 
@@ -285,7 +386,7 @@ export const App: React.FC = () => {
   }, [restaurantInfo]);
 
   // Navigation handlers
-  const handleNavigate = (tab: 'home' | 'menu' | 'gallery' | 'story' | 'contact') => {
+  const handleNavigate = (tab: 'home' | 'menu' | 'gallery' | 'contact' | 'table-menu') => {
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -456,9 +557,7 @@ export const App: React.FC = () => {
   };
 
   const handleDirectEditDishFromMenu = (dish: MenuItem) => {
-    setDishToEditForAdmin(dish);
-    setAdminInitialTab('dishes');
-    setIsAdminModalOpen(true);
+    setLiveEditDish(dish);
   };
 
   const handleOpenAdminWithTab = (tab: AdminTab = 'dishes') => {
@@ -504,6 +603,18 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleAdminLoginSuccess = () => {
+    setIsAdminAuthenticated(true);
+    setIsAdminModalOpen(true);
+    setIsAuthModalOpen(false);
+    setIsAdminLoginOpen(false);
+    try {
+      sessionStorage.setItem('al_bait_session_auth', Date.now().toString());
+    } catch {
+      // ignore
+    }
+  };
+
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
@@ -515,11 +626,31 @@ export const App: React.FC = () => {
           lang={lang}
           onOpenAdmin={handleOpenAdminWithTab}
           onOpenCreateDish={() => {
-            setDishToEditForAdmin(null);
-            setAdminInitialTab('dishes');
-            setIsAdminModalOpen(true);
+            const newDish: MenuItem = {
+              id: `dish-custom-${Date.now()}`,
+              titleAr: 'صنف شعبي جديد',
+              titleEn: 'New Heritage Dish',
+              descAr: 'وصف الصنف الشعبي ومكوناته وتوابله الأصيلة',
+              descEn: 'Authentic heritage recipe description',
+              price: 35,
+              categoryId: 'mains',
+              image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+              originRegion: 'الرياض / المطبخ الشعبي',
+              rating: 5.0,
+              reviewsCount: 1,
+              prepTimeMinutes: 20,
+              serves: '1-2 أشخاص',
+              isSpicy: false,
+              isPopular: false,
+              isChefSpecial: false
+            };
+            handleAddDish(newDish);
+            setLiveEditDish(newDish);
           }}
           onLogout={handleLogoutAdmin}
+          liveEditMode={liveEditMode}
+          onToggleLiveEdit={() => setLiveEditMode(!liveEditMode)}
+          onOpenQrMenu={() => setIsQrMenuOpen(true)}
         />
       )}
 
@@ -542,10 +673,24 @@ export const App: React.FC = () => {
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenReservation={() => setIsReservationOpen(true)}
+        onOpenQrMenu={() => handleNavigate('table-menu')}
+        onOpenOffersSubscription={() => {
+          setAuthModalInitialTab('member');
+          setIsAuthModalOpen(true);
+        }}
         isAdmin={isAdminAuthenticated}
         onOpenAdmin={() => handleOpenAdminWithTab('dishes')}
-        onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
+        onOpenAdminLogin={() => {
+          setAuthModalInitialTab('admin');
+          setIsAuthModalOpen(true);
+        }}
         catalogOnlyMode={siteSettings.catalogOnlyMode}
+        currentMember={currentMember}
+        onOpenAuthModal={() => {
+          setAuthModalInitialTab('member');
+          setIsAuthModalOpen(true);
+        }}
+        enableTableMenuPage={siteSettings.enableTableMenuPage}
       />
 
       {/* Main Content Area based on Tab */}
@@ -579,6 +724,9 @@ export const App: React.FC = () => {
               lang={lang}
               currency={currency}
               showPrices={siteSettings.showPrices}
+              isAdmin={isAdminAuthenticated}
+              liveEditMode={liveEditMode}
+              onEditDish={(dish) => setLiveEditDish(dish)}
             />
 
             {/* Restaurant Ambiance, Majlis & Hospitality Gallery (معرض الصور التفاعلي) */}
@@ -594,7 +742,9 @@ export const App: React.FC = () => {
             {/* Frequently Asked Questions (قسم الأسئلة الشائعة) */}
             <FaqSection
               lang={lang}
-              onOpenReservation={() => setIsReservationOpen(true)}
+              faqs={faqs}
+              isAdmin={isAdminAuthenticated}
+              onOpenAdminFaqs={() => handleOpenAdminWithTab('faqs')}
             />
 
             {/* Official Credentials & Transparency Section */}
@@ -622,6 +772,10 @@ export const App: React.FC = () => {
               onOpenReadyMenu={() => setIsReadyMenuOpen(true)}
               enableReadyMenu={restaurantInfo.enableReadyMenu}
               readyMenuTitle={lang === 'ar' ? restaurantInfo.readyMenuTitleAr : (restaurantInfo.readyMenuTitleEn || restaurantInfo.readyMenuTitleAr)}
+              warehouseItems={warehouseItems}
+              showDishesMenu={siteSettings.showDishesMenu}
+              showMenuWarehouse={siteSettings.showMenuWarehouse}
+              onOpenAdminWarehouse={() => handleOpenAdminWithTab('warehouse')}
             />
           </div>
         )}
@@ -632,25 +786,27 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'story' && (
-          <div className="pt-4 space-y-8">
-            <KitchenStorySection
-              lang={lang}
-              onExploreMenu={() => handleNavigate('menu')}
-              onBookTable={() => setIsReservationOpen(true)}
-              storyConfig={storyConfig}
-            />
-            {/* Official Credibility Credentials replaced unverified reviews */}
-            <OfficialCredentialsSection lang={lang} />
-          </div>
-        )}
-
         {activeTab === 'contact' && (
           <div className="pt-4">
             <ContactSection
               lang={lang}
               onOpenReservation={() => setIsReservationOpen(true)}
               restaurantInfo={restaurantInfo}
+            />
+          </div>
+        )}
+
+        {activeTab === 'table-menu' && (
+          <div className="py-2">
+            <TableMenuPage
+              lang={lang}
+              currency={currency}
+              onReturnToHome={() => handleNavigate('home')}
+              isAdmin={isAdminAuthenticated}
+              restaurantInfo={restaurantInfo}
+              siteSettings={siteSettings}
+              onUpdateSiteSettings={handleUpdateSiteSettings}
+              onQuickAddToCart={handleAddToCart}
             />
           </div>
         )}
@@ -689,6 +845,11 @@ export const App: React.FC = () => {
         catalogOnlyMode={siteSettings.catalogOnlyMode}
         showPrices={siteSettings.showPrices}
         whatsappNumber={restaurantInfo.whatsapp}
+        isAdmin={isAdminAuthenticated}
+        onEditDishAdmin={(dish) => {
+          setSelectedDishForModal(null);
+          setLiveEditDish(dish);
+        }}
         onOpenReservation={() => {
           setSelectedDishForModal(null);
           setIsReservationOpen(true);
@@ -755,6 +916,10 @@ export const App: React.FC = () => {
         onUpdateSiteSettings={handleUpdateSiteSettings}
         storyConfig={storyConfig}
         onUpdateStoryConfig={handleUpdateStoryConfig}
+        warehouseItems={warehouseItems}
+        onUpdateWarehouseItems={handleUpdateWarehouseItems}
+        faqs={faqs}
+        onUpdateFaqs={handleUpdateFaqs}
       />
 
       {/* Reusable Manual Image Upload & Management Modal */}
@@ -871,6 +1036,55 @@ export const App: React.FC = () => {
           }
         />
       )}
+
+      {/* Standalone Simple Table-like QR Menu Page for Visitors & Physical QR Codes */}
+      <QrTableMenu
+        isOpen={isQrMenuOpen}
+        onClose={() => setIsQrMenuOpen(false)}
+        lang={lang}
+        currency={currency}
+        isAdmin={isAdminAuthenticated}
+      />
+
+      {/* VIP Offers & Marketing Subscription Modal (Email/Phone Leads) */}
+      <OffersSubscriptionModal
+        isOpen={isOffersModalOpen}
+        onClose={() => setIsOffersModalOpen(false)}
+        lang={lang}
+      />
+
+      {/* Live In-Context Quick Dish Editor (Edit any item directly without entering control panel) */}
+      {liveEditDish && (
+        <QuickDishEditorModal
+          isOpen={!!liveEditDish}
+          dish={liveEditDish}
+          onClose={() => setLiveEditDish(null)}
+          onSave={(updated) => {
+            handleUpdateDish(updated);
+            setLiveEditDish(null);
+          }}
+          onDelete={(dishId) => {
+            handleDeleteDish(dishId);
+            setLiveEditDish(null);
+          }}
+          categories={categories}
+          lang={lang}
+          currency={currency}
+        />
+      )}
+
+      {/* Standalone User / Admin Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        lang={lang}
+        currentMember={currentMember}
+        onMemberLogin={handleMemberLogin}
+        onMemberLogout={handleMemberLogout}
+        isAdmin={isAdminAuthenticated}
+        onAdminLoginSuccess={handleAdminLoginSuccess}
+        initialTab={authModalInitialTab}
+      />
 
       {/* Floating Action Quick Contact & Scroll Top */}
       <FloatingActions lang={lang} />

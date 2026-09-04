@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Search, Flame, Sparkles, Plus, Star, Clock, Users,
   MapPin, Check, Soup, UtensilsCrossed, Cookie, Award, Coffee,
   Edit3, Fish, Heart, Sun, Zap, Salad, ChefHat, Eye, MessageCircle, Crown as CrownIcon,
-  BookOpen
+  BookOpen, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { MenuItem, CategoryId, Category, Language, Currency, CartItem } from '../types';
-import { CATEGORIES, RESTAURANT_INFO } from '../data/restaurantData';
+import { MenuItem, CategoryId, Category, Language, Currency, CartItem, MenuWarehouseItem } from '../types';
+import { CATEGORIES, RESTAURANT_INFO, DEFAULT_WAREHOUSE_ITEMS } from '../data/restaurantData';
 import { formatPrice } from '../utils/currency';
+import { MenuWarehouseSection } from './MenuWarehouseSection';
 
 interface MenuSectionProps {
   menuItems: MenuItem[];
@@ -27,6 +28,10 @@ interface MenuSectionProps {
   onOpenReadyMenu?: () => void;
   enableReadyMenu?: boolean;
   readyMenuTitle?: string;
+  warehouseItems?: MenuWarehouseItem[];
+  showDishesMenu?: boolean;
+  showMenuWarehouse?: boolean;
+  onOpenAdminWarehouse?: () => void;
 }
 
 export const MenuSection: React.FC<MenuSectionProps> = ({
@@ -46,12 +51,27 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
   whatsappNumber = RESTAURANT_INFO.whatsapp,
   onOpenReadyMenu,
   enableReadyMenu = true,
-  readyMenuTitle
+  readyMenuTitle,
+  warehouseItems = DEFAULT_WAREHOUSE_ITEMS,
+  showDishesMenu = false,
+  showMenuWarehouse = true,
+  onOpenAdminWarehouse
 }) => {
   const isAr = lang === 'ar';
+  const [activeMenuTab, setActiveMenuTab] = useState<'warehouse' | 'dishes'>(
+    showMenuWarehouse ? 'warehouse' : 'dishes'
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'popular' | 'chef' | 'spicy' | 'veg'>('all');
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScrollCategories = (direction: 'left' | 'right') => {
+    if (categoryScrollRef.current) {
+      const offset = direction === 'left' ? -260 : 260;
+      categoryScrollRef.current.scrollBy({ left: isAr ? -offset : offset, behavior: 'smooth' });
+    }
+  };
 
   // Filter items
   const filteredItems = useMemo(() => {
@@ -116,27 +136,74 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
 
   const currentCategoryMeta = categories.find((c) => c.id === selectedCategory);
 
+  // Remove prep time and portion size
   return (
-    <section id="menu-section" className="py-12 sm:py-16 bg-white">
+    <section id="menu-section" className="py-8 sm:py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
-        {/* Section Header */}
-        <div className="text-center space-y-3 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#faf9f6] border border-[#d4af37]/30 text-[#b8860b] text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
-            <span>{isAr ? 'كتالوج الأطباق الفاخرة' : 'Signature Culinary Catalog'}</span>
+        {/* Toggle between Warehouse and Dishes if both are enabled */}
+        {showDishesMenu && showMenuWarehouse && (
+          <div className="flex items-center justify-center gap-2 p-1.5 bg-[#faf9f6] border border-[#d4af37]/30 rounded-2xl max-w-md mx-auto">
+            <button
+              type="button"
+              onClick={() => setActiveMenuTab('warehouse')}
+              className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                activeMenuTab === 'warehouse'
+                  ? 'bg-[#141414] text-[#d4af37] shadow-xs'
+                  : 'text-stone-600 hover:text-[#141414]'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>{isAr ? 'مستودع المنيو المصور' : 'Menu Warehouse'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveMenuTab('dishes')}
+              className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                activeMenuTab === 'dishes'
+                  ? 'bg-[#141414] text-[#d4af37] shadow-xs'
+                  : 'text-stone-600 hover:text-[#141414]'
+              }`}
+            >
+              <UtensilsCrossed className="w-4 h-4" />
+              <span>{isAr ? 'أصناف الأطباق' : 'Dishes List'}</span>
+            </button>
           </div>
-          
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#141414] tracking-tight font-heading">
-            {isAr ? 'قائمة الطعام والولائم الأصيلة' : 'Heritage Dishes & Feasts Menu'}
-          </h2>
-          
-          <p className="text-sm sm:text-base text-stone-600 font-body">
-            {isAr
-              ? 'مُطهوة على حطب السمر الطبيعي وبالأواني الفخارية والصخرية البركانية الفائرة.'
-              : 'Slow-smoked over natural desert wood in traditional clay ovens and bubbling stone pots.'}
-          </p>
-        </div>
+        )}
+
+        {/* 1. Show Warehouse if activeMenuTab is warehouse OR if dishes menu is hidden */}
+        {(!showDishesMenu || activeMenuTab === 'warehouse') && showMenuWarehouse && (
+          <MenuWarehouseSection
+            lang={lang}
+            warehouseItems={warehouseItems}
+            showDishesMenu={showDishesMenu}
+            showMenuWarehouse={showMenuWarehouse}
+            onOpenAdminWarehouse={onOpenAdminWarehouse}
+            isAdmin={isAdmin}
+            onSwitchToDishesMenu={() => setActiveMenuTab('dishes')}
+          />
+        )}
+
+        {/* 2. Show Dishes Menu ONLY if showDishesMenu is TRUE and active tab is dishes */}
+        {showDishesMenu && activeMenuTab === 'dishes' && (
+          <div className="space-y-8">
+            {/* Section Header */}
+            <div className="text-center space-y-3 max-w-3xl mx-auto">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#faf9f6] border border-[#d4af37]/30 text-[#b8860b] text-xs font-bold uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+                <span>{isAr ? 'كتالوج الأطباق الفاخرة' : 'Signature Culinary Catalog'}</span>
+              </div>
+              
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#141414] tracking-tight font-heading">
+                {isAr ? 'قائمة الأطباق والولائم' : 'Heritage Dishes & Feasts'}
+              </h2>
+              
+              <p className="text-sm sm:text-base text-stone-600 font-body">
+                {isAr
+                  ? 'مُطهوة على حطب السمر الطبيعي وبالأواني الفخارية والصخرية البركانية الفائرة.'
+                  : 'Slow-smoked over natural desert wood in traditional clay ovens and bubbling stone pots.'}
+              </p>
+            </div>
 
         {/* Search & Quick Feature Filters */}
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-4 rounded-2xl bg-[#faf9f6] border border-[#d4af37]/25 shadow-xs">
@@ -224,46 +291,71 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
           </div>
         </div>
 
-        {/* Category Navigation Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        {/* Category Navigation Pills with Smooth Scroll Buttons */}
+        <div className="relative group/cats">
+          {/* Scroll Prev */}
           <button
-            id="category-pill-all"
-            onClick={() => onSelectCategory('all')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-              selectedCategory === 'all'
-                ? 'bg-[#141414] text-[#d4af37] border border-[#d4af37]/40 shadow-xs'
-                : 'bg-[#faf9f6] text-stone-700 border border-stone-200 hover:bg-stone-100'
-            }`}
+            type="button"
+            onClick={() => handleScrollCategories('left')}
+            className="hidden md:flex absolute -start-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 items-center justify-center text-stone-700 hover:text-[#141414] hover:bg-stone-50 transition-all cursor-pointer opacity-80 hover:opacity-100"
+            aria-label="تمرير السابق"
           >
-            <UtensilsCrossed className="w-4 h-4 text-[#d4af37]" />
-            <span>{isAr ? 'كافة الأقسام' : 'All Categories'}</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/15">
-              {menuItems.length}
-            </span>
+            {isAr ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
 
-          {categories.map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-            const countInCat = menuItems.filter((i) => i.categoryId === cat.id).length;
-            return (
-              <button
-                key={cat.id}
-                id={`category-pill-${cat.id}`}
-                onClick={() => onSelectCategory(cat.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                  isSelected
-                    ? 'bg-[#141414] text-[#d4af37] border border-[#d4af37]/40 shadow-xs'
-                    : 'bg-[#faf9f6] text-stone-700 border border-stone-200 hover:bg-stone-100'
-                }`}
-              >
-                <span className="text-[#d4af37]">{getCategoryIcon(cat.iconName || 'UtensilsCrossed')}</span>
-                <span>{isAr ? cat.nameAr : cat.nameEn}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-stone-200 text-stone-800">
-                  {countInCat}
-                </span>
-              </button>
-            );
-          })}
+          <div
+            ref={categoryScrollRef}
+            className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none overscroll-x-contain touch-pan-x scroll-smooth px-1"
+          >
+            <button
+              id="category-pill-all"
+              onClick={() => onSelectCategory('all')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
+                selectedCategory === 'all'
+                  ? 'bg-[#141414] text-[#d4af37] border border-[#d4af37]/40 shadow-xs'
+                  : 'bg-[#faf9f6] text-stone-700 border border-stone-200 hover:bg-stone-100'
+              }`}
+            >
+              <UtensilsCrossed className="w-4 h-4 text-[#d4af37]" />
+              <span>{isAr ? 'كافة الأقسام' : 'All Categories'}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/15">
+                {menuItems.length}
+              </span>
+            </button>
+
+            {categories.map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              const countInCat = menuItems.filter((i) => i.categoryId === cat.id).length;
+              return (
+                <button
+                  key={cat.id}
+                  id={`category-pill-${cat.id}`}
+                  onClick={() => onSelectCategory(cat.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
+                    isSelected
+                      ? 'bg-[#141414] text-[#d4af37] border border-[#d4af37]/40 shadow-xs'
+                      : 'bg-[#faf9f6] text-stone-700 border border-stone-200 hover:bg-stone-100'
+                  }`}
+                >
+                  <span className="text-[#d4af37]">{getCategoryIcon(cat.iconName || 'UtensilsCrossed')}</span>
+                  <span>{isAr ? cat.nameAr : cat.nameEn}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-stone-200 text-stone-800">
+                    {countInCat}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Scroll Next */}
+          <button
+            type="button"
+            onClick={() => handleScrollCategories('right')}
+            className="hidden md:flex absolute -end-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 items-center justify-center text-stone-700 hover:text-[#141414] hover:bg-stone-50 transition-all cursor-pointer opacity-80 hover:opacity-100"
+            aria-label="تمرير التالي"
+          >
+            {isAr ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
         </div>
 
         {/* Category Description Banner if single category selected */}
@@ -400,18 +492,6 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
                       </p>
                     </div>
 
-                    {/* Metadata Specs */}
-                    <div className="flex items-center gap-3 text-[11px] text-stone-500 pt-1 border-t border-stone-100">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-[#b8860b]" />
-                        <span>{dish.prepTimeMinutes} {isAr ? 'د' : 'min'}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="w-3.5 h-3.5 text-[#b8860b]" />
-                        <span>{dish.serves}</span>
-                      </div>
-                    </div>
-
                     {/* Price & Action Footer */}
                     <div className="pt-2 flex items-center justify-between gap-2 border-t border-stone-100">
                       <div>
@@ -494,6 +574,8 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
             })}
           </div>
         )}
+      </div>
+    )}
 
       </div>
     </section>

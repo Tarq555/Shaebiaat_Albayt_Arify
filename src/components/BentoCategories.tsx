@@ -4,15 +4,15 @@ import { Category, CategoryId, Language } from '../types';
 import { CATEGORIES, IMAGES } from '../data/restaurantData';
 
 interface BentoCategoriesProps {
-  lang: Language;
-  onSelectCategory: (categoryId: CategoryId) => void;
   categories?: Category[];
+  onSelectCategory: (categoryId: CategoryId) => void;
+  lang: Language;
 }
 
 export const BentoCategories: React.FC<BentoCategoriesProps> = ({
-  lang,
+  categories = CATEGORIES,
   onSelectCategory,
-  categories = CATEGORIES
+  lang
 }) => {
   const isAr = lang === 'ar';
   const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
@@ -68,7 +68,7 @@ export const BentoCategories: React.FC<BentoCategoriesProps> = ({
             return (
               <div
                 key={cat.id}
-                id={`category-card-${cat.id}`}
+                id={`bento-category-${cat.id}`}
                 onClick={() => onSelectCategory(cat.id)}
                 role="button"
                 tabIndex={0}
@@ -104,7 +104,7 @@ export const BentoCategories: React.FC<BentoCategoriesProps> = ({
                         {cat.badge}
                       </span>
                     )}
-                    {cat.count !== undefined && cat.count > 0 && (
+                    {cat.count !== undefined && (
                       <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/20">
                         {isAr ? `${cat.count} أصناف` : `${cat.count} Items`}
                       </span>

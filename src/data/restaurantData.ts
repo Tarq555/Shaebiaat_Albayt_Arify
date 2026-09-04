@@ -1,4 +1,4 @@
-import { Category, MenuItem } from '../types';
+import { Category, MenuItem, FaqItem, MenuWarehouseItem, SiteDisplaySettings } from '../types';
 
 // Authentic High-Quality Visuals for the Restaurant
 export const IMAGES = {
@@ -1163,7 +1163,7 @@ export const DEFAULT_HERO_CONFIG = {
   pillar3DescAr: 'فحسة وسلتة ساخنة من الصخر البركاني'
 };
 
-export const DEFAULT_SITE_SETTINGS = {
+export const DEFAULT_SITE_SETTINGS: SiteDisplaySettings = {
   catalogOnlyMode: true, // Display & Catalog only (no ordering/checkout friction)
   showPrices: true,
   enableAnnouncementBar: true,
@@ -1171,11 +1171,107 @@ export const DEFAULT_SITE_SETTINGS = {
   announcementTextEn: 'Welcome to Shaabiyat Al-Bait Al-Reefi - Exclusive Riyadh Flagship (Open 24/7 with Fresh Daily Meats)',
   exclusiveBranchNoticeAr: 'تنبيه: فرعنا الوحيد والحصري هو في الرياض فقط، وليس لدينا أي فروع أخرى خارج الرياض.',
   exclusiveBranchNoticeEn: 'Notice: Our sole exclusive location is in Riyadh only. We have no branches outside Riyadh.',
+  showDishesMenu: false, // Hidden by default per user request: "في المنيو اريدك ان تحذفه حاليا لاني طلبت منك ان تجعلني استطيع ان اضيف قائمة جاهزة مثل الصور او ملفات"
+  showMenuWarehouse: true, // Show uploaded menu warehouse pages by default
   readyMenuUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1600&q=85',
-  readyMenuTitleAr: 'قائمة طعام شعبيات البيت الريفي الشاملة (بروشور المنيو المجمع)',
-  readyMenuTitleEn: 'Shaabiyat Al-Bait Al-Reefi Complete Menu Brochure',
+  readyMenuTitleAr: 'مستودع وقائمة طعام شعبيات البيت الريفي الشاملة',
+  readyMenuTitleEn: 'Shaabiyat Al-Bait Al-Reefi Menu Catalog & Repository',
   enableReadyMenu: true
 };
+
+export const DEFAULT_FAQS: FaqItem[] = [
+  {
+    id: 'faq-delivery',
+    questionAr: 'هل يوجد توصيل للمنازل والشركات؟',
+    questionEn: 'Do you offer home & corporate delivery?',
+    answerAr: 'نعم، نوفر خدمة التوصيل المباشر والسريع لجميع أحياء الرياض عبر سيارات مجهزة لحفظ حرارة الأطباق الشعبية والولائم، كما يمكنكم الطلب المباشر عبر رقم الواتساب أو منصات التوصيل المعتمدة.',
+    answerEn: 'Yes, we provide swift delivery across Riyadh neighborhoods with heat-insulated transport to ensure dishes arrive piping hot.',
+    iconName: 'Truck'
+  },
+  {
+    id: 'faq-hours',
+    questionAr: 'ما هي أوقات وساعات العمل بالمطعم؟',
+    questionEn: 'What are your working hours?',
+    answerAr: 'نستقبلكم يومياً على مدار 24 ساعة دون انقطاع. ونقدم وجبات الإفطار الصباحي، الغداء التراثي مع ولائم الحطب، ووجبات العشاء المتنوعة.',
+    answerEn: 'We welcome you daily 24/7 continuously, serving breakfast, wood-fired lunch feasts, and evening dinners.',
+    iconName: 'Clock'
+  },
+  {
+    id: 'faq-preorder',
+    questionAr: 'هل يتوفر خيار الطلب المسبق للولائم والذبائح؟',
+    questionEn: 'Can I pre-order large feasts & whole lambs?',
+    answerAr: 'نعم بالتأكيد، نوصي بالحجز والطلب المسبق للذبائح الكاملة (تيس، حاشي، خروف نعيمي) أو الصواني الكبيرة قبل 3 إلى 4 ساعات على الأقل عبر الاتصال أو الواتساب لضمان طهيها على الحطب بأعلى درجات الإتقان.',
+    answerEn: 'Yes, we recommend pre-ordering whole lambs or large banquet platters at least 3-4 hours in advance via call or WhatsApp.',
+    iconName: 'Calendar'
+  },
+  {
+    id: 'faq-family-majlis',
+    questionAr: 'هل توجد جلسات عائلية خاصة ومستقلة؟',
+    questionEn: 'Are there private family majlis & private sections?',
+    answerAr: 'نعم، يوفر صرح شعبيات البيت الريفي بالرياض قسماً خاصاً ومستقلاً للعائلات مع بارتشن وسواتر كاملة وخصوصية تامة، بالإضافة إلى صالات VIP فخمة تناسب العزائم والاجتماعات العائلية.',
+    answerEn: 'Yes, we feature dedicated private family sections with complete privacy partitions, as well as luxury VIP reception halls.',
+    iconName: 'Users'
+  },
+  {
+    id: 'faq-reservation',
+    questionAr: 'كيف يمكن حجز جلسة أو الاستفسار قبل الحضور؟',
+    questionEn: 'How can I book or inquire before visiting?',
+    answerAr: 'الحجز والاستفسار متاح مباشرة وبكل سهولة عبر الاتصال الهاتفي أو محادثة الواتساب المباشرة مع فريق الضيافة لتجهيز مكانكم وضيافتكم.',
+    answerEn: 'Booking and inquiries are easily available via direct phone call or WhatsApp message with our hospitality team.',
+    iconName: 'PhoneCall'
+  },
+  {
+    id: 'faq-payments',
+    questionAr: 'هل تتوفر خيارات الدفع الإلكتروني ومدى وApple Pay؟',
+    questionEn: 'Do you accept electronic payments, Mada, and Apple Pay?',
+    answerAr: 'نعم، نقبل جميع وسائل الدفع المعتمدة بالمملكة: بطاقات مدى، فيزا، ماستركارد، Apple Pay، بالإضافة إلى الدفع النقدي.',
+    answerEn: 'Yes, we accept all standard Saudi payment methods including Mada cards, Apple Pay, Visa, Mastercard, and cash.',
+    iconName: 'CreditCard'
+  }
+];
+
+export const DEFAULT_WAREHOUSE_ITEMS: MenuWarehouseItem[] = [
+  {
+    id: 'wh-page-1',
+    titleAr: 'قائمة ولائم المندي والمضبي وحنيذ السمر',
+    titleEn: 'Mandi, Madhbi & Firewood Haneeth Feasts',
+    descriptionAr: 'صفحة الولائم الرئيسية ولحوم التيوس والنعيمي والحاشي الطازجة على الحطب',
+    descriptionEn: 'Main feasts page: fresh lamb, goat, and hashi meats slow-smoked over firewood',
+    imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1600&q=85',
+    category: 'ولائم ولحوم',
+    createdAt: '2025-01-01'
+  },
+  {
+    id: 'wh-page-2',
+    titleAr: 'قائمة الفخاريات الحجرية والمقلقل والإيدامات',
+    titleEn: 'Stone Pots, Fahsa, Saltah & Stews',
+    descriptionAr: 'الفحسة والسلتة الفائرة بالمدرة الحجرية وكبدة الحاشي والتقاطيع الطازجة',
+    descriptionEn: 'Bubbling volcanic stone pot Fahsa, Saltah, fresh hashi liver, and seasoned stews',
+    imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1600&q=85',
+    category: 'فخاريات وإيدامات',
+    createdAt: '2025-01-02'
+  },
+  {
+    id: 'wh-page-3',
+    titleAr: 'قائمة الإفطار الشعبي والمطبق والمعصوب الملكي',
+    titleEn: 'Breakfast, Mutabbaq & Royal Masoub',
+    descriptionAr: 'المعصوب بالقشطة والعسل والسمن البلدي، العريكة الملكية، الفول والمطبق المقرمش',
+    descriptionEn: 'Royal Masoub with cream, honey and ghee, crispy Mutabbaq, foul and morning dishes',
+    imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=85',
+    category: 'إفطار وحلى',
+    createdAt: '2025-01-03'
+  },
+  {
+    id: 'wh-page-4',
+    titleAr: 'قائمة المشروبات والمقبلات والشاي العدني التراثي',
+    titleEn: 'Beverages, Adeni Tea & Appetizers',
+    descriptionAr: 'الشاي العدني المبهر، العصائر الطازجة، والشوربات والمقبلات التراثية',
+    descriptionEn: 'Spiced Adeni milk tea, freshly squeezed juices, traditional soups and appetizers',
+    imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=85',
+    category: 'مشروبات ومقبلات',
+    createdAt: '2025-01-04'
+  }
+];
 
 export const DEFAULT_STORY_CONFIG = {
   badgeAr: 'أصالة متوارثة جيلاً بعد جيل بالرياض',

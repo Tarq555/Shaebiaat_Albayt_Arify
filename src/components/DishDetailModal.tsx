@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Flame, Clock, Users, Star, Plus, Minus, Check, MapPin, Sparkles, MessageCircle, Phone, Calendar } from 'lucide-react';
+import { X, Flame, Star, Plus, Minus, Check, MapPin, Sparkles, MessageCircle, Phone, Edit3 } from 'lucide-react';
 import { MenuItem, Language, Currency } from '../types';
 import { formatPrice } from '../utils/currency';
 import { RESTAURANT_INFO } from '../data/restaurantData';
@@ -13,7 +13,8 @@ interface DishDetailModalProps {
   catalogOnlyMode?: boolean;
   showPrices?: boolean;
   whatsappNumber?: string;
-  onOpenReservation?: () => void;
+  isAdmin?: boolean;
+  onEditDishAdmin?: (dish: MenuItem) => void;
 }
 
 export const DishDetailModal: React.FC<DishDetailModalProps> = ({
@@ -25,22 +26,20 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
   catalogOnlyMode = true,
   showPrices = true,
   whatsappNumber = RESTAURANT_INFO.whatsapp,
-  onOpenReservation
+  isAdmin = false,
+  onEditDishAdmin
 }) => {
   const isAr = lang === 'ar';
   const [quantity, setQuantity] = useState(1);
-  const [portion, setPortion] = useState<'regular' | 'large' | 'family'>('regular');
   const [specialNotes, setSpecialNotes] = useState('');
   const [addedAnimation, setAddedAnimation] = useState(false);
 
-  // Price modifier based on portion
-  const portionMultiplier = portion === 'regular' ? 1 : portion === 'large' ? 1.4 : 2.2;
-  const currentPrice = dish ? Math.round(dish.price * portionMultiplier) : 0;
+  const currentPrice = dish ? dish.price : 0;
   const totalPrice = currentPrice * quantity;
 
   const handleAdd = () => {
     if (!dish) return;
-    onAddToCart(dish, quantity, portion, specialNotes);
+    onAddToCart(dish, quantity, 'regular', specialNotes);
     setAddedAnimation(true);
     setTimeout(() => {
       setAddedAnimation(false);
@@ -49,11 +48,10 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
   };
 
   const dishTitle = dish ? (isAr ? dish.titleAr : dish.titleEn) : '';
-  const portionName = portion === 'regular' ? (isAr ? 'فردي' : 'Regular') : portion === 'large' ? (isAr ? 'كبير' : 'Large') : (isAr ? 'عائلي' : 'Family');
   const whatsappDishUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
     isAr
-      ? `السلام عليكم ورحمة الله، أود الاستفسار وطلب طبق: (${dishTitle} - حجم ${portionName}) من شعبيات البيت الريفي بالرياض.`
-      : `Hello, I would like to inquire about and order: (${dishTitle} - ${portionName} portion) from Shaabiyat Al-Bait Al-Reefi in Riyadh.`
+      ? `السلام عليكم ورحمة الله، أود الاستفسار وطلب طبق: (${dishTitle}) من شعبيات البيت الريفي بالرياض.`
+      : `Hello, I would like to inquire about and order: (${dishTitle}) from Shaabiyat Al-Bait Al-Reefi in Riyadh.`
   )}`;
 
   React.useEffect(() => {
@@ -146,93 +144,37 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
             <p className="text-sm text-stone-600 leading-relaxed font-body">
               {isAr ? dish.descAr : dish.descEn}
             </p>
-          </div>
 
-          {/* Quick specs */}
-          <div className="grid grid-cols-3 gap-2.5 py-3 border-y border-stone-100 text-center">
-            <div className="p-2.5 rounded-2xl bg-[#faf9f6] border border-stone-200">
-              <span className="block text-[11px] font-bold text-[#b8860b] mb-0.5">
-                {isAr ? 'وقت التحضير' : 'Prep Time'}
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-[#141414] flex items-center justify-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-[#b8860b]" />
-                {dish.prepTimeMinutes} {isAr ? 'دقيقة' : 'mins'}
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-2xl bg-[#faf9f6] border border-stone-200">
-              <span className="block text-[11px] font-bold text-[#b8860b] mb-0.5">
-                {isAr ? 'حجم الصحن' : 'Portion'}
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-[#141414] flex items-center justify-center gap-1">
-                <Users className="w-3.5 h-3.5 text-[#b8860b]" />
-                {dish.serves}
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-2xl bg-[#faf9f6] border border-stone-200">
-              <span className="block text-[11px] font-bold text-[#b8860b] mb-0.5">
-                {isAr ? 'السعرات الحرارية' : 'Calories'}
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-[#141414] flex items-center justify-center gap-1">
-                <Flame className="w-3.5 h-3.5 text-[#b8860b]" />
-                {dish.calories || 550} {isAr ? 'سعرة' : 'kcal'}
-              </span>
-            </div>
-          </div>
-
-          {/* Ingredients list */}
-          {((isAr ? dish.ingredientsAr : dish.ingredientsEn) || []).length > 0 && (
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#b8860b]">
-                {isAr ? 'المكونات والمطحونات الطبيعية' : 'Natural Ingredients & Spices'}
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                {(isAr ? dish.ingredientsAr : dish.ingredientsEn)?.map((ing, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 rounded-xl bg-[#faf9f6] text-xs font-bold text-[#141414] border border-stone-200"
-                  >
-                    {ing}
-                  </span>
-                ))}
+            {/* Live Admin Edit Button */}
+            {isAdmin && onEditDishAdmin && (
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onEditDishAdmin(dish);
+                    onClose();
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-[#d4af37] hover:bg-[#ffe38a] text-[#141414] text-xs font-extrabold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs border border-[#141414]"
+                >
+                  <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>{isAr ? '✏️ تعديل بيانات وصورة هذا الصنف فوراً' : 'Edit This Dish & Photo Now'}</span>
+                </button>
               </div>
+            )}
+          </div>
+
+          {/* Calories & Heritage Badge */}
+          {dish.calories && (
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-[#faf9f6] border border-stone-200">
+              <span className="text-xs font-bold text-[#b8860b]">
+                {isAr ? 'القيمة الغذائية التقريبية' : 'Approx. Nutritional Info'}
+              </span>
+              <span className="text-xs font-bold text-[#141414] flex items-center gap-1">
+                <Flame className="w-3.5 h-3.5 text-[#b8860b]" />
+                {dish.calories} {isAr ? 'سعرة حرارية' : 'kcal'}
+              </span>
             </div>
           )}
-
-          {/* Portion Selector */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-[#b8860b]">
-              {isAr ? 'أحجام الصحن المتوفرة بالمطعم' : 'Available Portion Sizes'}
-            </label>
-            <div className="grid grid-cols-3 gap-2.5">
-              {[
-                { id: 'regular', labelAr: 'فردي / عادي', labelEn: 'Regular (1 Person)', mult: 1 },
-                { id: 'large', labelAr: 'مزدوج / كبير', labelEn: 'Large (2 Persons)', mult: 1.4 },
-                { id: 'family', labelAr: 'عائلي / ديوان', labelEn: 'Family Feast (3-4)', mult: 2.2 },
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  id={`portion-btn-${opt.id}`}
-                  onClick={() => setPortion(opt.id as any)}
-                  className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
-                    portion === opt.id
-                      ? 'bg-[#141414] text-[#d4af37] border-[#d4af37]/50 shadow-md font-bold'
-                      : 'bg-[#faf9f6] text-stone-700 border-stone-200 hover:bg-stone-100'
-                  }`}
-                >
-                  <span className="block text-xs font-bold">
-                    {isAr ? opt.labelAr : opt.labelEn}
-                  </span>
-                  {showPrices && (
-                    <span className={`block text-[11px] font-semibold mt-0.5 ${portion === opt.id ? 'text-[#d4af37]' : 'text-stone-500'}`}>
-                      {formatPrice(Math.round(dish.price * opt.mult), currency, isAr)}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Special Notes */}
           {!catalogOnlyMode && (
@@ -287,20 +229,6 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
                   <Phone className="w-4 h-4 text-[#b8860b]" />
                   <span className="hidden sm:inline">{isAr ? 'اتصال' : 'Call'}</span>
                 </a>
-
-                {onOpenReservation && (
-                  <button
-                    id="dish-modal-reserve-btn"
-                    onClick={() => {
-                      onClose();
-                      onOpenReservation();
-                    }}
-                    className="px-4 py-3 rounded-xl bg-[#141414] hover:bg-black text-[#d4af37] border border-[#d4af37]/40 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                  >
-                    <Calendar className="w-4 h-4 text-[#d4af37]" />
-                    <span>{isAr ? 'حجز جلسة' : 'Book Table'}</span>
-                  </button>
-                )}
               </div>
             </div>
           ) : (

@@ -131,6 +131,26 @@ export interface RestaurantInfoType {
   enableReadyMenu?: boolean;
 }
 
+export interface FaqItem {
+  id: string;
+  questionAr: string;
+  questionEn: string;
+  answerAr: string;
+  answerEn: string;
+  iconName?: string;
+}
+
+export interface MenuWarehouseItem {
+  id: string;
+  titleAr: string;
+  titleEn: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
+  imageUrl: string;
+  category?: string;
+  createdAt?: string;
+}
+
 export interface SiteDisplaySettings {
   catalogOnlyMode: boolean; // True = display/catalog only (no cart/payment); False = full online cart ordering
   showPrices: boolean;
@@ -139,10 +159,21 @@ export interface SiteDisplaySettings {
   announcementTextEn: string;
   exclusiveBranchNoticeAr: string;
   exclusiveBranchNoticeEn: string;
+  showDishesMenu: boolean; // Control whether individual dishes grid is displayed (false by default per user request)
+  showMenuWarehouse: boolean; // Control whether the menu warehouse/uploaded catalog images are displayed
   readyMenuUrl?: string;
   readyMenuTitleAr?: string;
   readyMenuTitleEn?: string;
   enableReadyMenu?: boolean;
+  enableTableMenuPage?: boolean; // Control existence of standalone Table Menu without photos
+}
+
+export interface MemberUser {
+  name: string;
+  phone: string;
+  email?: string;
+  loginTime: number;
+  discountCode?: string;
 }
 
 export interface StoryConfig {
@@ -160,4 +191,4 @@ export interface StoryConfig {
 
 export type Currency = 'YER' | 'SAR' | 'USD';
 
-export type AdminTab = 'dishes' | 'categories' | 'photos' | 'hero' | 'display' | 'restaurant' | 'story' | 'reservations' | 'security';
+export type AdminTab = 'warehouse' | 'faqs' | 'dishes' | 'categories' | 'photos' | 'hero' | 'display' | 'restaurant' | 'security' | 'reservations' | 'subscribers';

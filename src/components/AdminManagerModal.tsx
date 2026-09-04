@@ -8,17 +8,22 @@ import {
   Star, Sun, Zap, Salad, ChefHat, Edit3, Sliders, ToggleLeft, ToggleRight,
   BookOpen, Palette, CheckCircle2
 } from 'lucide-react';
-import { MenuItem, CategoryId, Category, Language, Reservation, HeroConfig, SiteDisplaySettings, StoryConfig, RestaurantInfoType, SocialLinks, ShowSocialLinks, AdminTab } from '../types';
+import { MenuItem, CategoryId, Category, Language, Reservation, HeroConfig, SiteDisplaySettings, StoryConfig, RestaurantInfoType, SocialLinks, ShowSocialLinks, AdminTab, MenuWarehouseItem, FaqItem } from '../types';
 import {
   CATEGORIES as DEFAULT_CATEGORIES,
   INITIAL_MENU_ITEMS,
   IMAGES,
   DEFAULT_HERO_CONFIG,
   DEFAULT_SITE_SETTINGS,
-  DEFAULT_STORY_CONFIG
+  DEFAULT_STORY_CONFIG,
+  DEFAULT_FAQS,
+  DEFAULT_WAREHOUSE_ITEMS
 } from '../data/restaurantData';
 import { DishImagePicker } from './DishImagePicker';
 import { compressImageFile } from '../utils/imageUpload';
+import { AdminWarehouseTab } from './AdminWarehouseTab';
+import { AdminFaqTab } from './AdminFaqTab';
+import { AdminSubscribersTab } from './AdminSubscribersTab';
 
 export type { RestaurantInfoType };
 
@@ -49,6 +54,10 @@ interface AdminManagerModalProps {
   onUpdateSiteSettings?: (settings: SiteDisplaySettings) => void;
   storyConfig?: StoryConfig;
   onUpdateStoryConfig?: (story: StoryConfig) => void;
+  warehouseItems?: MenuWarehouseItem[];
+  onUpdateWarehouseItems?: (items: MenuWarehouseItem[]) => void;
+  faqs?: FaqItem[];
+  onUpdateFaqs?: (faqs: FaqItem[]) => void;
 }
 
 export const AdminManagerModal: React.FC<AdminManagerModalProps> = ({
@@ -77,10 +86,14 @@ export const AdminManagerModal: React.FC<AdminManagerModalProps> = ({
   siteSettings = DEFAULT_SITE_SETTINGS,
   onUpdateSiteSettings,
   storyConfig = DEFAULT_STORY_CONFIG,
-  onUpdateStoryConfig
+  onUpdateStoryConfig,
+  warehouseItems = DEFAULT_WAREHOUSE_ITEMS,
+  onUpdateWarehouseItems,
+  faqs = DEFAULT_FAQS,
+  onUpdateFaqs
 }) => {
   const isAr = lang === 'ar';
-  const [activeTab, setActiveTab] = useState<'dishes' | 'categories' | 'hero' | 'display' | 'restaurant' | 'story' | 'reservations' | 'security'>(initialTab);
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
 
   // Hero Config state
   const [heroState, setHeroState] = useState<HeroConfig>(heroConfig);
@@ -815,15 +828,16 @@ export const AdminManagerModal: React.FC<AdminManagerModalProps> = ({
         {/* Tab Navigation */}
         <div className="bg-[#faf9f6] border-b border-stone-200 px-4 sm:px-6 flex items-center gap-1 sm:gap-2 overflow-x-auto shrink-0 scrollbar-none">
           {[
-            { id: 'dishes', labelAr: '🍽️ قائمة الأصناف والولائم', labelEn: '🍽️ Dishes & Menu', count: menuItems.length },
+            { id: 'warehouse', labelAr: '📦 مستودع وقوائم المنيو', labelEn: '📦 Menu Warehouse', count: warehouseItems.length },
+            { id: 'faqs', labelAr: '❓ الأسئلة الشائعة وإجاباتها', labelEn: '❓ FAQs & Answers', count: faqs.length },
+            { id: 'dishes', labelAr: '🍽️ أصناف الأطباق والولائم', labelEn: '🍽️ Dishes & Menu', count: menuItems.length },
             { id: 'categories', labelAr: '📂 أقسام الطعام', labelEn: '📂 Categories', count: categories.length },
-            { id: 'photos', labelAr: '🎨 تغيير صور الموقع والواجهات', labelEn: '🎨 Site Photos' },
+            { id: 'photos', labelAr: '🎨 صور الموقع والواجهات', labelEn: '🎨 Site Photos' },
             { id: 'hero', labelAr: '✨ الواجهة والتعريف الشفاف', labelEn: '✨ Hero & Intro' },
-            { id: 'display', labelAr: '⚙️ وضع العرض والكتالوج', labelEn: '⚙️ Display Mode' },
-            { id: 'restaurant', labelAr: '🏢 بيانات المطعم والفرع', labelEn: '🏢 Branch Settings' },
-            { id: 'story', labelAr: '📜 قصة وتراث المطعم', labelEn: '📜 Our Story' },
-            { id: 'reservations', labelAr: '📅 سجل الحجوزات', labelEn: '📅 Bookings', count: reservations.length },
-            { id: 'security', labelAr: '🔐 الأمان والنسخ وجاهزية جوجل', labelEn: '🔐 Security & Google Readiness' },
+            { id: 'display', labelAr: '⚙️ التحكم في العرض والمنيو', labelEn: '⚙️ Display & Visibility' },
+            { id: 'restaurant', labelAr: '🏢 بيانات المطعم والتواصل', labelEn: '🏢 Branch Settings' },
+            { id: 'subscribers', labelAr: '👥 المشتركون في العروض والتسويق', labelEn: '👥 Subscribers & Leads' },
+            { id: 'security', labelAr: '🔐 الأمان والنسخ الاحتياطي', labelEn: '🔐 Security & Backup' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -852,6 +866,29 @@ export const AdminManagerModal: React.FC<AdminManagerModalProps> = ({
 
         {/* Content Body */}
         <div className="p-4 sm:p-6 overflow-y-auto grow">
+
+          {/* TAB: WAREHOUSE (مستودع المنيو المصور والبروشورات الجاهزة) */}
+          {activeTab === 'warehouse' && (
+            <AdminWarehouseTab
+              lang={lang}
+              warehouseItems={warehouseItems}
+              onUpdateWarehouseItems={onUpdateWarehouseItems || (() => {})}
+              siteSettings={siteState}
+              onUpdateSiteSettings={(s) => {
+                setSiteState(s);
+                if (onUpdateSiteSettings) onUpdateSiteSettings(s);
+              }}
+            />
+          )}
+
+          {/* TAB: FAQS (إدارة الأسئلة الشائعة وإجاباتك الشخصية) */}
+          {activeTab === 'faqs' && (
+            <AdminFaqTab
+              lang={lang}
+              faqs={faqs}
+              onUpdateFaqs={onUpdateFaqs || (() => {})}
+            />
+          )}
           
           {/* TAB 1: DISHES & MENU */}
           {activeTab === 'dishes' && (
@@ -2407,6 +2444,43 @@ export const AdminManagerModal: React.FC<AdminManagerModalProps> = ({
                 </div>
               </div>
 
+              {/* Setting 5: Standalone Table Menu & QR Code (No Photos) Control */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border-2 border-stone-200 space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-[#141414]">
+                        {isAr ? '📋 صفحة منيو الطاولات والباركود (جدول أصناف بدون صور)' : 'Standalone Table Menu Page (No Photos)'}
+                      </span>
+                      {siteState.enableTableMenuPage !== false && (
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                          {isAr ? 'مفعلة' : 'Active'}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-stone-600 leading-relaxed">
+                      {isAr
+                        ? 'صفحة مستقلة مخصصة لزوار الطاولات والباركود لعرض جدول خفيف وسريع بالأصناف والأسعار بدون صور. يمكنك تفعيلها أو إيقاف ظهورها للزوار والتحكم الكامل في محتواها.'
+                        : 'Independent page for dining tables and QR codes showing a fast table with items and prices without photos.'}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSiteState({ ...siteState, enableTableMenuPage: siteState.enableTableMenuPage === false ? true : false })}
+                    className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                      siteState.enableTableMenuPage !== false ? 'bg-[#141414]' : 'bg-stone-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                        siteState.enableTableMenuPage !== false ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
               {/* Submit */}
               <div className="flex justify-end pt-3 border-t border-stone-200">
                 <button
@@ -3210,6 +3284,11 @@ export const AdminManagerModal: React.FC<AdminManagerModalProps> = ({
                 </div>
               </div>
             </div>
+          )}
+
+          {/* TAB: SUBSCRIBERS & MARKETING LEADS */}
+          {activeTab === 'subscribers' && (
+            <AdminSubscribersTab lang={lang} />
           )}
 
         </div>

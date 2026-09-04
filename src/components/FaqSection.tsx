@@ -1,77 +1,24 @@
 import React, { useState } from 'react';
 import {
   HelpCircle, ChevronDown, Sparkles, PhoneCall,
-  MessageCircle, Clock, Truck, Calendar, Users, CreditCard, ShieldCheck
+  MessageCircle, Clock, Truck, Calendar, Users, CreditCard, Edit3
 } from 'lucide-react';
-import { Language } from '../types';
-import { RESTAURANT_INFO } from '../data/restaurantData';
-
-interface FaqItem {
-  id: string;
-  questionAr: string;
-  questionEn: string;
-  answerAr: string;
-  answerEn: string;
-  icon: React.ReactNode;
-}
-
-const FAQ_DATA: FaqItem[] = [
-  {
-    id: 'faq-delivery',
-    questionAr: 'هل يوجد توصيل للمنازل والشركات؟',
-    questionEn: 'Do you offer home & corporate delivery?',
-    answerAr: 'نعم، نوفر خدمة التوصيل المباشر والسريع لجميع أحياء الرياض عبر سيارات مجهزة لحفظ حرارة الأطباق الشعبية والولائم، كما يمكنكم الطلب المباشر عبر رقم الواتساب أو منصات التوصيل المعتمدة.',
-    answerEn: 'Yes, we provide swift delivery across Riyadh neighborhoods with heat-insulated transport to ensure dishes arrive piping hot.',
-    icon: <Truck className="w-5 h-5 text-[#d4af37]" />
-  },
-  {
-    id: 'faq-hours',
-    questionAr: 'ما هي أوقات وساعات العمل بالمطعم؟',
-    questionEn: 'What are your working hours?',
-    answerAr: 'نستقبلكم يومياً من الساعة 06:00 صباحاً وحتى الساعة 01:30 بعد منتصف الليل دون انقطاع. ونقدم وجبات الإفطار الصباحي، الغداء التراثي مع ولائم الحطب، ووجبات العشاء المتنوعة.',
-    answerEn: 'We welcome you daily from 6:00 AM until 1:30 AM continuously, serving breakfast, wood-fired lunch feasts, and evening dinners.',
-    icon: <Clock className="w-5 h-5 text-[#d4af37]" />
-  },
-  {
-    id: 'faq-preorder',
-    questionAr: 'هل يتوفر خيار الطلب المسبق للولائم والذبائح؟',
-    questionEn: 'Can I pre-order large feasts & whole lambs?',
-    answerAr: 'نعم بالتأكيد، نوصي بالحجز والطلب المسبق للذبائح الكاملة (تيس، حاشي، خروف نعيمي) أو الصواني الكبيرة قبل 3 إلى 4 ساعات على الأقل، لضمان طهيها على حطب السمر والتنور الطيني بأعلى درجات الإتقان.',
-    answerEn: 'Yes, we recommend pre-ordering whole lambs or large banquet platters at least 3-4 hours in advance for optimal slow wood-fired smoking.',
-    icon: <Calendar className="w-5 h-5 text-[#d4af37]" />
-  },
-  {
-    id: 'faq-family-majlis',
-    questionAr: 'هل توجد جلسات عائلية خاصة ومستقلة؟',
-    questionEn: 'Are there private family majlis & private sections?',
-    answerAr: 'نعم، يوفر صرح شعبيات البيت الريفي بالرياض قسماً خاصاً ومستقلاً للعائلات مع بارتشن وسواتر كاملة وخصوصية تامة، بالإضافة إلى صالات VIP فخمة تناسب العزائم والاجتماعات العائلية.',
-    answerEn: 'Yes, we feature dedicated private family sections with complete privacy partitions, as well as luxury VIP reception halls.',
-    icon: <Users className="w-5 h-5 text-[#d4af37]" />
-  },
-  {
-    id: 'faq-reservation',
-    questionAr: 'هل يمكن حجز طاولة أو جلسة مسبقاً قبل الحضور؟',
-    questionEn: 'Can I reserve a table or majlis beforehand?',
-    answerAr: 'نعم، يمكنك حجز جلستك العائلية أو صالة VIP مسبقاً عبر زر "حجز جلسة" بالموقع أو بالتواصل المباشر عبر الواتساب أو الهاتف لتجهيز ضيافتك قبل وصولك.',
-    answerEn: 'Yes, you can easily book your family majlis or VIP hall in advance via the website reservation button or via phone/WhatsApp.',
-    icon: <PhoneCall className="w-5 h-5 text-[#d4af37]" />
-  },
-  {
-    id: 'faq-payments',
-    questionAr: 'هل تتوفر خيارات الدفع الإلكتروني ومدى وApple Pay؟',
-    questionEn: 'Do you accept electronic payments, Mada, and Apple Pay?',
-    answerAr: 'نعم، نقبل جميع وسائل الدفع المعتمدة بالمملكة: بطاقات مدى، فيزا، ماستركارد، Apple Pay، بالإضافة إلى الدفع النقدي والدفع عند الاستلام.',
-    answerEn: 'Yes, we accept all standard Saudi payment methods including Mada cards, Apple Pay, Visa, Mastercard, and cash upon delivery.',
-    icon: <CreditCard className="w-5 h-5 text-[#d4af37]" />
-  }
-];
+import { Language, FaqItem } from '../types';
+import { RESTAURANT_INFO, DEFAULT_FAQS } from '../data/restaurantData';
 
 interface FaqSectionProps {
   lang: Language;
-  onOpenReservation?: () => void;
+  faqs?: FaqItem[];
+  isAdmin?: boolean;
+  onOpenAdminFaqs?: () => void;
 }
 
-export const FaqSection: React.FC<FaqSectionProps> = ({ lang, onOpenReservation }) => {
+export const FaqSection: React.FC<FaqSectionProps> = ({
+  lang,
+  faqs = DEFAULT_FAQS,
+  isAdmin = false,
+  onOpenAdminFaqs
+}) => {
   const isAr = lang === 'ar';
   const [openIndex, setOpenIndex] = useState<number | null>(0); // First item open by default
 
@@ -81,9 +28,21 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ lang, onOpenReservation 
 
   const whatsappInquiryUrl = `https://wa.me/${RESTAURANT_INFO.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
     isAr
-      ? 'السلام عليكم، لدي استفسار إضافي حول مطعم شعبيات البيت الريفي'
-      : 'Hello, I have an inquiry regarding Shaabiyat Al-Bait Al-Reefi restaurant'
+      ? 'السلام عليكم، أود الاستفسار حول خدمات مطعم شعبيات البيت الريفي والحجز'
+      : 'Hello, I would like to inquire about Shaabiyat Al-Bait Al-Reefi services and reservations'
   )}`;
+
+  const renderIcon = (iconName?: string) => {
+    switch (iconName) {
+      case 'Truck': return <Truck className="w-5 h-5 text-[#d4af37]" />;
+      case 'Clock': return <Clock className="w-5 h-5 text-[#d4af37]" />;
+      case 'Calendar': return <Calendar className="w-5 h-5 text-[#d4af37]" />;
+      case 'Users': return <Users className="w-5 h-5 text-[#d4af37]" />;
+      case 'CreditCard': return <CreditCard className="w-5 h-5 text-[#d4af37]" />;
+      case 'PhoneCall': return <PhoneCall className="w-5 h-5 text-[#d4af37]" />;
+      default: return <HelpCircle className="w-5 h-5 text-[#d4af37]" />;
+    }
+  };
 
   return (
     <section id="faq-section" className="py-12 sm:py-16 bg-white border-b border-[#d4af37]/25 relative overflow-hidden">
@@ -91,23 +50,37 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ lang, onOpenReservation 
         
         {/* Section Header */}
         <div className="text-center mb-10 sm:mb-12 space-y-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#d4af37]/15 text-[#b8860b] border border-[#d4af37]/30">
-            <HelpCircle className="w-3.5 h-3.5 text-[#d4af37]" />
-            {isAr ? 'إجابات واضحة لراحتكم' : 'Frequently Asked Questions'}
-          </span>
+          <div className="flex items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#d4af37]/15 text-[#b8860b] border border-[#d4af37]/30">
+              <HelpCircle className="w-3.5 h-3.5 text-[#d4af37]" />
+              {isAr ? 'إجابات واضحة ومباشرة' : 'Frequently Asked Questions'}
+            </span>
+            {isAdmin && onOpenAdminFaqs && (
+              <button
+                type="button"
+                onClick={onOpenAdminFaqs}
+                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#141414] text-[#d4af37] border border-[#d4af37]/50 hover:bg-black transition-all cursor-pointer"
+                title={isAr ? 'تعديل وإضافة الأسئلة والأجوبة' : 'Edit FAQs in Admin'}
+              >
+                <Edit3 className="w-3 h-3 text-[#d4af37]" />
+                <span>{isAr ? 'إدارة الأسئلة' : 'Edit FAQs'}</span>
+              </button>
+            )}
+          </div>
+
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#141414] tracking-tight font-heading">
-            {isAr ? 'الأسئلة الشائعة والمعلومات المهمة' : 'FAQ & Visitor Guide'}
+            {isAr ? 'الأسئلة الشائعة وإجاباتها الرسمية' : 'FAQ & Hospitality Guide'}
           </h2>
           <p className="text-sm sm:text-base text-stone-600 font-body">
             {isAr
-              ? 'كل ما يهمك معرفته حول خدماتنا، أوقات العمل، التوصيل، الحجوزات والجلسات العائلية في شعبيات البيت الريفي.'
-              : 'Everything you need to know about our services, opening hours, delivery, private majlis, and payments.'}
+              ? 'إجابات مباشرة حول خدماتنا، أوقات العمل، التوصيل، وحجوزات الجلسات والولائم عبر التواصل المباشر.'
+              : 'Direct answers regarding our services, working hours, delivery, and direct reservations.'}
           </p>
         </div>
 
         {/* Accordions List */}
         <div className="space-y-3 sm:space-y-4">
-          {FAQ_DATA.map((item, idx) => {
+          {faqs.map((item, idx) => {
             const isOpen = openIndex === idx;
             return (
               <div
@@ -127,7 +100,7 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ lang, onOpenReservation 
                 >
                   <div className="flex items-center gap-3.5 sm:gap-4">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-stone-100 flex items-center justify-center shrink-0 border border-stone-200">
-                      {item.icon}
+                      {renderIcon(item.iconName)}
                     </div>
                     <span className="text-base sm:text-lg font-bold text-[#141414] font-heading">
                       {isAr ? item.questionAr : item.questionEn}
@@ -143,7 +116,7 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ lang, onOpenReservation 
 
                 {isOpen && (
                   <div className="px-5 sm:px-6 pb-5 pt-1 text-sm sm:text-base text-stone-600 font-body leading-relaxed border-t border-[#d4af37]/15">
-                    <p>{isAr ? item.answerAr : item.answerEn}</p>
+                    <p className="whitespace-pre-line">{isAr ? item.answerAr : item.answerEn}</p>
                   </div>
                 )}
               </div>
@@ -155,12 +128,12 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ lang, onOpenReservation 
         <div className="mt-8 sm:mt-10 p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#141414] via-[#1c1c1c] to-[#141414] text-white border border-[#d4af37]/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
           <div className="space-y-1 text-center sm:text-start">
             <h4 className="text-base sm:text-lg font-bold text-[#d4af37] font-heading">
-              {isAr ? 'هل لديك سؤال أو طلب خاص؟' : 'Have a special request or inquiry?'}
+              {isAr ? 'هل لديك سؤال أو طلب حجز خاص؟' : 'Have a special booking or inquiry?'}
             </h4>
             <p className="text-xs sm:text-sm text-stone-300">
               {isAr
-                ? 'فريق الضيافة جاهز للرد على استفسارك فوراً وتجهيز ولائمك بكل سرور.'
-                : 'Our hospitality team is available 24/7 to answer your inquiries.'}
+                ? 'فريق الضيافة جاهز للرد على استفسارك فوراً وتأكيد حجزك عبر الواتساب أو الاتصال المباشر.'
+                : 'Our hospitality team is available to answer your questions and confirm your booking directly.'}
             </p>
           </div>
 
@@ -182,7 +155,7 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ lang, onOpenReservation 
               className="px-4 py-2.5 rounded-xl bg-[#d4af37] hover:bg-[#e5c158] text-[#141414] font-extrabold text-xs sm:text-sm transition-all flex items-center gap-2 shadow-md cursor-pointer"
             >
               <PhoneCall className="w-4 h-4 text-[#141414]" />
-              <span>{isAr ? 'اتصال مباشر' : 'Call Direct'}</span>
+              <span>{isAr ? 'اتصال مباشر للحجز' : 'Call Direct to Book'}</span>
             </a>
           </div>
         </div>

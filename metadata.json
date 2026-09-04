@@ -1,6 +1,6 @@
 {
-  "name": "Remix Shaabiyat Al-Bait Al-Reefi",
-  "description": "Authentic Yemeni Cuisine \u0026 Heritage Modernism Dining Experience - شعبيات البيت الريفي",
+  "name": "Shaabiyat Al-Bait Al-Reefi",
+  "description": "Authentic Yemeni Cuisine & Heritage Modernism Dining Experience - شعبيات البيت الريفي",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
